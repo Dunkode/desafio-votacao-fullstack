@@ -1,7 +1,6 @@
 package br.dev.ederson.spring.cooperativa.controller;
 
 
-import br.dev.ederson.spring.cooperativa.AgendaStatus;
 import br.dev.ederson.spring.cooperativa.exception.BadRequestException;
 import br.dev.ederson.spring.cooperativa.exception.NotFoundException;
 import br.dev.ederson.spring.cooperativa.model.Agenda;
@@ -11,14 +10,12 @@ import br.dev.ederson.spring.cooperativa.model.Session;
 import br.dev.ederson.spring.cooperativa.service.AgendaService;
 import br.dev.ederson.spring.cooperativa.service.AssociateService;
 import br.dev.ederson.spring.cooperativa.service.SessionService;
-import org.apache.commons.lang3.StringUtils;
+import br.dev.ederson.spring.cooperativa.service.VoteService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.data.repository.query.Param;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.time.LocalDateTime;
 
 @RestController
 public class AssemblyRestController {
@@ -26,57 +23,29 @@ public class AssemblyRestController {
     @Autowired private AgendaService agendaService;
     @Autowired private AssociateService associateService;
     @Autowired private SessionService sessionService;
+    @Autowired private VoteService voteService;
 
-
-    @GetMapping("/hello")
-    public String hello() {
-        return "Hello, Spring Boot!";
-    }
 
     @PostMapping("/createAssociate")
     public Response createAssociate(@RequestBody Associate associate) throws BadRequestException {
-        if (StringUtils.isBlank(associate.getName()))
-            throw new BadRequestException("Associate name must be specified!");
-
-        if (StringUtils.isBlank(associate.getDocument()))
-            throw new BadRequestException("Associate document must be specified!");
-
-        associate = associateService.save(associate);
-
+        associate = associateService.createAssociate(associate);
         return new Response("Associate " + associate.getName() + " registered successfully!");
     }
 
     @PostMapping("/createAgenda")
     public Response createAgenda(@RequestBody Agenda agenda) throws BadRequestException {
-        if (StringUtils.isBlank(agenda.getDescription()))
-            throw new BadRequestException("Agenda description must be specified!");
-
-        agenda.setRegistrationDate(LocalDateTime.now());
-        agenda.setStatus(AgendaStatus.TO_VOTE);
-        agenda = agendaService.save(agenda);
-
+        agenda = agendaService.createAgenda(agenda);
         return new Response("Agenda " + agenda.getDescription() + " registered successfully!");
     }
 
     @PostMapping("/createSession")
-    public Response createSession(@RequestBody Session session) throws BadRequestException {
-        if (session.getDurationTime() <= 0)
-            throw new BadRequestException("Session duration time must be specified (in minutes)!");
-
-        session = sessionService.save(session);
-
+    public Response createSession(@RequestBody Session session) {
+        session = sessionService.createSession(session);
         return new Response("Session " + session.getId() + " registered successfully!");
     }
 
-
     @PostMapping("/addAgendaToSession")
-    public Response addAgendaToSession(@RequestBody Long agendaId, Long sessionId) throws BadRequestException, NotFoundException {
-        if (agendaId == null)
-            throw new BadRequestException("An Agenda must be specified!");
-
-        if (sessionId == null)
-            throw new BadRequestException("An Agenda must be specified!");
-
+    public Response addAgendaToSession(@Param("agendaId") Long agendaId, @Param("sessionId") Long sessionId) throws BadRequestException, NotFoundException {
         Agenda agenda = agendaService.getById(agendaId);
         if (agenda == null)
             throw new NotFoundException("Agenda " + agendaId + " not found!");
@@ -85,17 +54,31 @@ public class AssemblyRestController {
         if (session == null)
             throw new NotFoundException("Session " + sessionId + " not found!");
 
-        sessionService.addAgenda(session, agenda);
-
+        sessionService.addAgendaToSession(agenda, session);
         return new Response("Agenda has added to Session successfully!");
     }
 
     @PostMapping("/startSession")
-    public String startSession(@RequestBody Session session) throws BadRequestException {
-        if (session.getAgendas() == null || !session.getAgendas().isEmpty())
-            throw new BadRequestException("Session Agendas must be specified!");
+    public Response startSession(@Param("sessionId") Long sessionId) throws BadRequestException, NotFoundException {
+        Session session = sessionService.startSession(sessionId);
+        return new Response("Session " + session.getId() + " started and will last for " + session.getDurationTime() + " minutes.");
+    }
 
-        return "Session " + session.getId() + " started and will last for " + session.getDurationTime() + " minutes.";
+    @PostMapping("/vote")
+    public Response vote(@Param("associateId") Long associateId, @Param("agendaId") Long agendaId, @Param("approve") Boolean approve) throws BadRequestException, NotFoundException {
+        Associate associate = associateService.getById(agendaId);
+        if (associate == null)
+            throw new NotFoundException("Associate " + associateId + " not found!");
+
+        Agenda agenda = agendaService.getById(agendaId);
+        if (agenda == null)
+            throw new NotFoundException("Agenda " + agendaId + " not found!");
+
+        if (approve == null)
+            throw new BadRequestException("You need to specify your Vote on this Agenda.");
+
+        voteService.registerVote(associate, agenda, approve);
+        return new Response("You voted to "+ (approve ? "" : "not") + " aprove Agenda " + agendaId + ".");
     }
 
 }
