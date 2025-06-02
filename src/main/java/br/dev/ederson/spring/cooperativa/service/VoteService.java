@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class VoteService {
@@ -23,5 +25,22 @@ public class VoteService {
         vote.setVoteDate(LocalDateTime.now());
 
         voteRepository.save(vote);
+    }
+
+    public List<Vote> getVotesByAgenda(Agenda agenda) {
+        return voteRepository.findByAgenda(agenda);
+    }
+
+    public List<Agenda> getAgendasByAssociate(Associate associate) {
+        List<Vote> votesByAssociate = voteRepository.findByAssociate(associate);
+        return votesByAssociate.stream().map(Vote::getAgenda).collect(Collectors.toList());
+    }
+
+    public int countVotesForAgenda(Agenda agenda) {
+        return voteRepository.countVotesForAgenda(agenda);
+    }
+
+    public int countVotesNotApproved(Agenda agenda) {
+        return voteRepository.countVotesNotApproved(agenda);
     }
 }
