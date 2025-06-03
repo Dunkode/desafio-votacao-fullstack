@@ -1,4 +1,4 @@
-package br.dev.ederson.spring.cooperativa;
+package br.dev.ederson.spring.cooperativa.enumerador;
 
 public enum AgendaStatus {
     TO_VOTE(0),

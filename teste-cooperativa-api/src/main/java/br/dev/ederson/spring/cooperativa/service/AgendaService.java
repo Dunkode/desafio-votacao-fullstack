@@ -1,6 +1,6 @@
 package br.dev.ederson.spring.cooperativa.service;
 
-import br.dev.ederson.spring.cooperativa.AgendaStatus;
+import br.dev.ederson.spring.cooperativa.enumerador.AgendaStatus;
 import br.dev.ederson.spring.cooperativa.exception.BadRequestException;
 import br.dev.ederson.spring.cooperativa.model.Agenda;
 import br.dev.ederson.spring.cooperativa.model.Session;

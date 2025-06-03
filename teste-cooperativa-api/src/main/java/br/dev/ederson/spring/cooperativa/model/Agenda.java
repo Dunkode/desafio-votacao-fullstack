@@ -1,6 +1,6 @@
 package br.dev.ederson.spring.cooperativa.model;
 
-import br.dev.ederson.spring.cooperativa.AgendaStatus;
+import br.dev.ederson.spring.cooperativa.enumerador.AgendaStatus;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
