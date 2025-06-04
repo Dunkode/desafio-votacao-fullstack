@@ -10,6 +10,6 @@ export function createRestConsumer(baseURL, customHeaders = {}) {
   });
 }
 
-const restConsumer = createRestConsumer('http://15.229.78.133:8081/');
+const RestConsumer = createRestConsumer('http://15.229.78.133:8081/');
 
-export default restConsumer;
+export default RestConsumer;
