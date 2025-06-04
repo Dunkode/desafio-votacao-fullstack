@@ -27,10 +27,6 @@ public class VoteService {
         voteRepository.save(vote);
     }
 
-    public List<Vote> getVotesByAgenda(Agenda agenda) {
-        return voteRepository.findByAgenda(agenda);
-    }
-
     public List<Agenda> getAgendasByAssociate(Associate associate) {
         List<Vote> votesByAssociate = voteRepository.findByAssociate(associate);
         return votesByAssociate.stream().map(Vote::getAgenda).collect(Collectors.toList());
@@ -42,5 +38,9 @@ public class VoteService {
 
     public int countVotesNotApproved(Agenda agenda) {
         return voteRepository.countVotesNotApproved(agenda);
+    }
+
+    public Vote getVoteStatus(Long agendaId, Long associateId) {
+        return voteRepository.getVoteStatus(agendaId, associateId);
     }
 }

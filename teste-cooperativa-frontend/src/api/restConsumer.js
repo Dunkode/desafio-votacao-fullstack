@@ -1,10 +1,15 @@
 import axios from 'axios';
 
-const restConsumer = axios.create({
-  baseURL: 'http://15.229.78.133:8081/',
-  headers: {
-    'Content-Type': 'application/json'
-  }
-});
+export function createRestConsumer(baseURL, customHeaders = {}) {
+  return axios.create({
+    baseURL,
+    headers: {
+      'Content-Type': 'application/json',
+      ...customHeaders
+    }
+  });
+}
+
+const restConsumer = createRestConsumer('http://15.229.78.133:8081/');
 
 export default restConsumer;

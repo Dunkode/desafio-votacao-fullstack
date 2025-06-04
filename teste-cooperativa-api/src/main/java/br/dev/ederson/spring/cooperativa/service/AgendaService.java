@@ -25,16 +25,12 @@ public class AgendaService {
         return agendaRepository.findById(agendaId).orElse(null);
     }
 
-    public Agenda createAgenda(Agenda agenda) throws BadRequestException {
-        if (StringUtils.isBlank(agenda.getDescription()))
+    public Agenda createAgenda(String description) throws BadRequestException {
+        if (StringUtils.isBlank(description))
             throw new BadRequestException("Agenda description must be specified!");
 
-        if (agenda.getResultDate() != null)
-            throw new BadRequestException("Agenda result date cannot be specified!");
-
-        if (agenda.getRegistrationDate() != null)
-            throw new BadRequestException("Agenda registration date cannot be specified!");
-
+        Agenda agenda = new Agenda();
+        agenda.setDescription(description);
         agenda.setRegistrationDate(LocalDateTime.now());
         agenda.setStatus(AgendaStatus.TO_VOTE);
 
@@ -49,4 +45,15 @@ public class AgendaService {
         return agendaRepository.findBySession(session);
     }
 
+    public void addAgendaToSession(Agenda agenda, Session session) throws BadRequestException {
+        if (agenda.getSession() != null)
+            throw new BadRequestException("This Agenda is already attached in one Session!");
+
+        addAgenda(session, agenda);
+    }
+
+    private void addAgenda(Session session, Agenda agenda) {
+        agenda.setSession(session);
+        agendaRepository.save(agenda);
+    }
 }

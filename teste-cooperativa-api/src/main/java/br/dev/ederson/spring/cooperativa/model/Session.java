@@ -3,7 +3,6 @@ package br.dev.ederson.spring.cooperativa.model;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -18,8 +17,6 @@ public class Session {
     private LocalDateTime startDate;
     @Column
     private LocalDateTime endDate;
-    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Agenda> agendas;
 
     public Long getId() {
         return id;
@@ -75,11 +72,4 @@ public class Session {
                 '}';
     }
 
-    public List<Agenda> getAgendas() {
-        return agendas;
-    }
-
-    public void setAgendas(List<Agenda> agendas) {
-        this.agendas = agendas;
-    }
 }

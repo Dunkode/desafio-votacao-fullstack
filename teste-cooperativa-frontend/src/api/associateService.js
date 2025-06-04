@@ -1,10 +1,17 @@
-import axios from 'axios';
-import restConsumer from './restConsumer';
+import RestConsumer from './RestConsumer';
 
-const associateService = {
-  createAssociate: (associate) => axios.post('http://15.229.78.133:8081/associate', associate, Headers = {
-    'Content-Type': 'application/json'
-  }),
+
+const AssociateService = {
+  createAssociate: (associate) =>
+    RestConsumer.post(
+      '/associate',
+      associate,
+      {
+        'Content-Type': 'application/json'
+      }
+    ),
+  getAssociateByDocument: (document) =>
+    RestConsumer.get(`getAssociateByDocument?document=${document}`),
 };
 
-export default associateService;
+export default AssociateService;

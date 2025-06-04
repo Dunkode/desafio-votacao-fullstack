@@ -1,8 +1,13 @@
 import './App.css';
-import AppRoutes from './routes';
+import { AssociateProvider } from './context/AssociateContext.js';
+import AppRoutes from './Routes.js';
 
 function App() {
-  return <AppRoutes />;
+  return (
+    <AssociateProvider>
+      <AppRoutes />
+    </AssociateProvider>
+  )
 }
 
 export default App;

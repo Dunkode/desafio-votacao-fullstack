@@ -1,42 +1,92 @@
+import { Box, Button, Paper, TextField, Typography } from '@mui/material';
+import Grid from '@mui/material/Grid';
 import React, { useState } from 'react';
+import { useAssociate } from '../context/AssociateContext';
+import AssociateService from '../api/AssociateService';
 import { useNavigate } from 'react-router-dom';
 
 function Login() {
-    const [cpf, setCpf] = useState('');
-    const navigate = useNavigate();
+  const [document, setDocument] = useState('');
+  const navigate = useNavigate();
+  const { setAssociate } = useAssociate(null);
 
-    const handleLogin = () => {
-        // Aqui você pode adicionar a lógica de login com o CPF
-        alert(`CPF digitado: ${cpf}`);
-    };
+  const handleLogin = (document, setAssociate) => {
+    if (!document) {
+      alert('Please enter your document number.');
+    } else {
+      AssociateService.getAssociateByDocument(document)
+      .then((response) => {
+        setAssociate(response.data);
+        navigate('/menu');
+      })
+      .catch((error) => {
+        console.error('Error fetching associate:', error);
+        alert('Error while doing login: ' + (error.response?.data?.errorMessage || 'Unknown error'));
+      });  
+    }
+      
+  };
+  
+  return (
 
-    const handleNavigate = () => {
-        navigate();
-    };
-
-    return (
-        <div style={{ maxWidth: 300, margin: '100px auto', textAlign: 'center' }}>
-            <h2>Login</h2>
-            <input
-                type="text"
-                placeholder="Digite seu CPF"
-                value={cpf}
-                onChange={e => setCpf(e.target.value)}
-                style={{ width: '100%', padding: 8, marginBottom: 16 }}
-            />
-            <br />
-            <button onClick={handleLogin} style={{ width: '100%', padding: 8 }}>
-                Logar
-            </button>
-            <br /><br />
-            <span
-                onClick={() => navigate('/associateForm')}
-                style={{ color: 'blue', textDecoration: 'underline', cursor: 'pointer' }}
-            >
-                Realizar cadastro
-            </span>
-        </div>
-    );
+    <Grid
+      container
+      justifyContent="center"
+      alignItems="center"
+      sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}
+    >
+      <Grid item xs={12} sm={9} md={4}>
+        <Paper elevation={3} sx={{ p: 3, borderRadius: 2 }}>
+          <Box mb={3} textAlign="center">
+            <Typography variant="h5" component="h2">
+              Enter your credentials to access.
+            </Typography>
+          </Box>
+          <form>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  label="Document"
+                  fullWidth
+                  variant="standard"
+                  value={document}
+                  onChange={(e) => setDocument(e.target.value)}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  fullWidth
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleLogin(document, setAssociate);
+                  }}
+                >
+                  Access Cooperative
+                </Button>
+              </Grid>
+              <Grid item xs={12}>
+                <Button
+                  type="button"
+                  variant="text"
+                  color="primary"
+                  fullWidth
+                  onClick={() => {
+                    navigate('/createAssociate');
+                  }}
+                >
+                  Create Associate
+                </Button>
+              </Grid>
+            </Grid>
+          </form>
+        </Paper>
+      </Grid>
+    </Grid>
+  );
 }
 
 export default Login;

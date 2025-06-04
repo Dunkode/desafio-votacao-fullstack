@@ -3,6 +3,7 @@ package br.dev.ederson.spring.cooperativa.service;
 import br.dev.ederson.spring.cooperativa.enumerador.AgendaStatus;
 import br.dev.ederson.spring.cooperativa.exception.BadRequestException;
 import br.dev.ederson.spring.cooperativa.exception.NotFoundException;
+import br.dev.ederson.spring.cooperativa.model.Agenda;
 import br.dev.ederson.spring.cooperativa.model.Session;
 import br.dev.ederson.spring.cooperativa.repository.SessionRepository;
 import br.dev.ederson.spring.cooperativa.util.ProjectUtil;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
@@ -23,6 +25,14 @@ public class SessionService {
     private VoteService voteService;
     @Autowired
     private AgendaService agendaService;
+
+    public List<Session> getSessions() {
+        return sessionRepository.findAll();
+    }
+
+    public List<Session> getAllSessionsNotInitialized() {
+        return sessionRepository.getAllSessionsNotInitialized();
+    }
 
     public Session getById(Long agendaId) {
         return sessionRepository.findById(agendaId).orElse(null);
@@ -41,7 +51,7 @@ public class SessionService {
         if (session == null)
             throw new NotFoundException("Session " + sessionId + " not found!");
 
-        if (ProjectUtil.isEmpty(session.getAgendas()))
+        if (ProjectUtil.isEmpty(agendaService.getAgendasBySession(session)))
             throw new BadRequestException("Session Agendas must be specified before start the vote process!");
 
         if (session.getStartDate() != null)
@@ -56,7 +66,7 @@ public class SessionService {
     }
 
     private void setAgendasInVotation(Session session) {
-        session.getAgendas().forEach(agenda -> agenda.setStatus(AgendaStatus.VOTING));
+        agendaService.getAgendasBySession(session).forEach(agenda -> agenda.setStatus(AgendaStatus.VOTING));
     }
 
     private void initializeTimer(Session session) {
@@ -77,19 +87,19 @@ public class SessionService {
     }
 
     private void computeVotes(Session session) {
-        ExecutorService executorService = Executors.newFixedThreadPool(session.getAgendas().size());
+        List<Agenda> agendasBySession = agendaService.getAgendasBySession(session);
+        ExecutorService executorService = Executors.newFixedThreadPool(agendasBySession.size());
 
-        session.getAgendas().forEach(agenda -> executorService.execute(() -> {
+        agendasBySession.forEach(agenda -> executorService.execute(() -> {
             int qtdVotes = voteService.countVotesForAgenda(agenda);
             int qtdVotesNotApproved = voteService.countVotesNotApproved(agenda);
 
-            if (qtdVotes == qtdVotesNotApproved || qtdVotesNotApproved >= (qtdVotes / 2))
+            if ((qtdVotes == 0) || (qtdVotesNotApproved > (qtdVotes / 2)))
                 agenda.setStatus(AgendaStatus.REJECTED);
             else
                 agenda.setStatus(AgendaStatus.APPROVED);
 
             agendaService.save(agenda);
-            sessionRepository.save(session);
         }));
     }
 
